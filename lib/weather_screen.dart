@@ -15,11 +15,8 @@ class WeatherScreen extends StatefulWidget {
 
   class _WeatherScreenState extends State<WeatherScreen>{
   double temp=-99.9;
-  @override
-    void initState() {
-      super.initState();
-      getCurrentWeather();
-    }
+
+    late Future<Map<String,dynamic>> weather;
   Future<Map<String,dynamic>> getCurrentWeather() async{
     try {
       final res = await http.get(
@@ -36,7 +33,11 @@ class WeatherScreen extends StatefulWidget {
     }
 
   }
-
+  @override
+  void initState() {
+    super.initState();
+    weather=getCurrentWeather();
+  }
 
 
   @override
@@ -47,13 +48,15 @@ class WeatherScreen extends StatefulWidget {
   centerTitle: true,
   actions: [
   IconButton(onPressed: (){
-  //TODO implement page refresh with data
+  setState(() {
+    weather=getCurrentWeather();
+  });
   }, icon: Icon(Icons.refresh)
   )
   ],
   ),
   body: FutureBuilder(
-    future: getCurrentWeather(),
+    future: weather,
     builder:(context,snapshot){
     print(snapshot);
     if(snapshot.connectionState==ConnectionState.waiting){
