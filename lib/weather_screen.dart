@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:weather_app/secrets.dart';
 
 import 'hourly_forecast.dart';
@@ -120,7 +121,7 @@ class WeatherScreen extends StatefulWidget {
     children: [
       for(int i=1;i<31;i++)
         HourlyForecast(
-          time: data['list'][i]['dt'].toString(),
+          time: DateFormat.j().format(DateTime.parse( data['list'][i]['dt_txt'])),
           icon: data['list'][i]['weather'][0]['main']== 'Clouds' || data['list'][i]['weather'][0]['main']=='Rain'? Icons.cloud:Icons.sunny,
           temp: "${data['list'][i]['main']['temperature'].toString()} C",
     ),
