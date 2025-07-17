@@ -118,7 +118,7 @@ class WeatherScreen extends StatefulWidget {
     scrollDirection: Axis.horizontal,
     child: Row(
     children: [
-      for(int i=1;i<6;i++)
+      for(int i=1;i<31;i++)
         HourlyForecast(
           time: data['list'][i]['dt'].toString(),
           icon: data['list'][i]['weather'][0]['main']== 'Clouds' || data['list'][i]['weather'][0]['main']=='Rain'? Icons.cloud:Icons.sunny,
