@@ -17,22 +17,43 @@ class WeatherScreen extends StatefulWidget {
   double temp=-99.9;
 
     late Future<Map<String,dynamic>> weather;
-  Future<Map<String,dynamic>> getCurrentWeather() async{
-    try {
-      final res = await http.get(
-          Uri.parse(
-              "http://api.openweathermap.org/data/2.5/forecast?q=Cairo,eg&APPID=$apikey "));
-      final data = jsonDecode(res.body);
-      if (data['cod']!='200'){
-        throw data["message"];
-      }
-       return data;
-    }
-    catch(e){
-      throw e.toString();
+  Future<Map<String, dynamic>> getCurrentWeather() async {
+    final url = Uri.parse(
+        "http://api.openweathermap.org/data/2.5/forecast?q=Cairo,eg&APPID=$apikey&units=metric"
+    );
+
+    final res = await http.get(url);
+
+
+    debugPrint("HTTP ${res.statusCode} → ${res.body}");
+
+    if (res.statusCode != 200) {
+      throw Exception("HTTP ${res.statusCode}: ${res.reasonPhrase}");
     }
 
+
+    dynamic raw;
+    try {
+      raw = jsonDecode(res.body);
+    } on FormatException catch (e) {
+      throw Exception("JSON parse error: ${e.message}\nBody was: ${res.body}");
+    }
+
+
+    if (raw == null) {
+      throw Exception("Decoded JSON was null! Body: ${res.body}");
+    }
+
+
+    if (raw is! Map<String, dynamic>) {
+      throw Exception(
+          "Expected JSON object, but got ${raw.runtimeType}:\n$raw"
+      );
+    }
+
+    return raw;
   }
+
   @override
   void initState() {
     super.initState();
@@ -62,15 +83,17 @@ class WeatherScreen extends StatefulWidget {
     if(snapshot.connectionState==ConnectionState.waiting){
     return Center(child: const CircularProgressIndicator());
     }
-    // if(snapshot.hasError){
-    // return Text(snapshot.error.toString());
-    // }
+     if(snapshot.hasError){
+     return Text(snapshot.error.toString());
+    }
     final data = snapshot.data!;
-    final currTemp = data['list'][0]['main']['temperature'];
-    final currSky = data['list']['0']['weather'][0]['main'];
-    final press = data['list'][0]['main']['pressure'];
+    final currTemp = data['list'][0]['main']['temp'];
+    final currSky = data['list'][0]['weather'][0]['main'];
+    final press = data['list'][0]['main']['pressure']* 0.0145037738;
     final wSpeed = data['list'][0]['wind']['speed'];
     final humidity = data['list'][0]['main']['humidity'];
+
+    
 
     return
       Padding(
@@ -92,7 +115,7 @@ class WeatherScreen extends StatefulWidget {
     padding: const EdgeInsets.all(16.0),
     child: Column(
     children: [
-    Text("$currTemp C ",
+    Text("${currTemp} C ",
     style: TextStyle(fontSize: 32,fontWeight:FontWeight.bold),),
     const SizedBox(height: 16,),
     Icon(
@@ -126,7 +149,7 @@ class WeatherScreen extends StatefulWidget {
         HourlyForecast(
           time: DateFormat.j().format(DateTime.parse( data['list'][i]['dt_txt'])),
           icon: data['list'][i]['weather'][0]['main']== 'Clouds' || data['list'][i]['weather'][0]['main']=='Rain'? Icons.cloud:Icons.sunny,
-          temp: "${data['list'][i]['main']['temperature'].toString()} C",
+          temp: "${data['list'][i]['main']['temp'].toString()} C",
     ),
 
     ],
@@ -134,7 +157,7 @@ class WeatherScreen extends StatefulWidget {
     ),
     const SizedBox(height: 20),
     const Text(
-    "Additonal Information",
+    "Additional Information",
     style: TextStyle(fontSize: 32,fontWeight: FontWeight.bold),
     ),
     const SizedBox(height: 8),
@@ -149,7 +172,7 @@ class WeatherScreen extends StatefulWidget {
     const SizedBox(height:8),
     const Text("Humidity"),
     const SizedBox(height:8),
-    Text("${humidity.toString}%",
+    Text("$humidity%",
     style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)
 
     ],
@@ -163,26 +186,12 @@ class WeatherScreen extends StatefulWidget {
     const SizedBox(height:8),
     const Text("Wind Speed"),
     const SizedBox(height:8),
-    Text("${wSpeed.toString} KM/H",
+    Text("$wSpeed KM/H",
     style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)
 
     ],
     ),
     ),
-    Padding(
-    padding: const EdgeInsets.all(8),
-    child: Column(
-    children: [
-    const Icon(Icons.beach_access,size: 48,),
-    const SizedBox(height:8),
-    const Text("Pressure"),
-    const SizedBox(height:8),
-    Text("${press.toString()} PSI",
-    style: const TextStyle(fontSize: 16,fontWeight: FontWeight.bold),)
-
-    ],
-    ),
-    )
     ],
     )
     ],
